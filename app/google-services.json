@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "157959704801",
+    "project_id": "week12-realtime-db",
+    "storage_bucket": "week12-realtime-db.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:157959704801:android:d10f7dd83cf04ac45327a0",
+        "android_client_info": {
+          "package_name": "edu.farmingdale.alrajab.week12_auth_ml_api_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHqb8LxDyYIgaIhWIenw0VJ1ywQZpe9x0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
