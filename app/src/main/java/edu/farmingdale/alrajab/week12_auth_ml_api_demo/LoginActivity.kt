@@ -1,22 +1,17 @@
 package edu.farmingdale.alrajab.week12_auth_ml_api_demo
 
-import android.content.ContentValues.TAG
 import android.content.Intent
-import android.content.IntentSender
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
-import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.CommonStatusCodes
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import edu.farmingdale.alrajab.week12_auth_ml_api_demo.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
@@ -27,7 +22,10 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var signInRequest: BeginSignInRequest
     private val REQ_ONE_TAP = 2  // Can be any integer unique to the Activity
     private var showOneTapUI = true
+    private lateinit var mGoogleSignInClient: GoogleSignInClient
+    private lateinit var mAuth: FirebaseAuth
 
+    private val RC_SIGN_IN = 2021
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,52 +37,53 @@ class LoginActivity : AppCompatActivity() {
             val intent = Intent(this, SignUpActivity::class.java)
             startActivity(intent)
         }
-        binding.loginBtn.setOnClickListener{
+        binding.loginBtn.setOnClickListener {
             login();
         }
+        binding.googleBtn.setOnClickListener{
+            loginWithGoogle()
+        }
 
-        oneTapClient = Identity.getSignInClient(this)
-        signInRequest = BeginSignInRequest.builder()
-            .setGoogleIdTokenRequestOptions(
-                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
-                    // Your server's client ID, not your Android client ID.
-                    .setServerClientId(getString(R.string.web_client_id))
-                    // Only show accounts previously used to sign in.
-                    .setFilterByAuthorizedAccounts(true)
-                    .build())
+    }
+
+    private fun loginWithGoogle() {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.web_client_id))
+            .requestEmail()
             .build()
 
-        val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        val googleSignInClient = GoogleSignIn.getClient(this, gso)
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(signInIntent, RC_SIGN_IN)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
-                val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
-                val idToken = credential.googleIdToken
-                if (idToken != null) {
-                    val email = credential.id
-                    Toast.makeText(applicationContext, "Email : $email", Toast.LENGTH_SHORT).show()
-                }
-                Log.d("TA6", "Got ID token.")
+                val account = task.getResult(ApiException::class.java)
+                firebaseAuthWithGoogle(account.idToken!!)
             } catch (e: ApiException) {
-                e.printStackTrace()
+                Toast.makeText(this, "Google sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
-        binding.googleBtn.setOnClickListener {
-            Log.d(TAG, "GGGGGGGGGGGGGGGG")
-            oneTapClient.beginSignIn(signUpRequest)
-                .addOnSuccessListener(this) { result ->
-                    try {
-                        val intentSenderRequest = IntentSenderRequest.Builder(
-                            result.pendingIntent.intentSender).build()
-                        activityResultLauncher.launch(intentSenderRequest)
-                    } catch (e: Exception) {
-                        Log.d(TAG, e.localizedMessage)
-                    }
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        firebaseAuth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = firebaseAuth.currentUser
+                    Toast.makeText(this, "Signed in as ${user?.displayName}", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this, LandingActivity::class.java))
+                    finish()
+                } else {
+                    Toast.makeText(this, "Authentication failed", Toast.LENGTH_SHORT).show()
                 }
-                .addOnFailureListener(this) { e ->
-                    Log.d(TAG, e.localizedMessage)
-                }
-        }
+            }
     }
 
     private fun login() {
