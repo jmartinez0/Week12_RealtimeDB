@@ -24,9 +24,10 @@ class LoginActivity : AppCompatActivity() {
     lateinit var binding:ActivityLoginBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var oneTapClient: SignInClient
-    private lateinit var signUpRequest: BeginSignInRequest
+    private lateinit var signInRequest: BeginSignInRequest
     private val REQ_ONE_TAP = 2  // Can be any integer unique to the Activity
     private var showOneTapUI = true
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,20 +44,15 @@ class LoginActivity : AppCompatActivity() {
         }
 
         oneTapClient = Identity.getSignInClient(this)
-        signUpRequest = BeginSignInRequest.builder()
-            .setPasswordRequestOptions(BeginSignInRequest.PasswordRequestOptions.builder()
-                .setSupported(true)
-                .build())
+        signInRequest = BeginSignInRequest.builder()
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
                     // Your server's client ID, not your Android client ID.
                     .setServerClientId(getString(R.string.web_client_id))
                     // Only show accounts previously used to sign in.
-                    .setFilterByAuthorizedAccounts(false)
+                    .setFilterByAuthorizedAccounts(true)
                     .build())
-            // Automatically sign in when exactly one credential is retrieved.
-            .setAutoSelectEnabled(true)
             .build()
 
         val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -89,9 +85,6 @@ class LoginActivity : AppCompatActivity() {
                     Log.d(TAG, e.localizedMessage)
                 }
         }
-
-
-
     }
 
     private fun login() {
@@ -114,9 +107,6 @@ class LoginActivity : AppCompatActivity() {
 
         }
     }
-
-
-
 
 
 }
