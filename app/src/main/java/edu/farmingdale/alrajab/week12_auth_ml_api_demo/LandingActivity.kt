@@ -3,6 +3,7 @@ package edu.farmingdale.alrajab.week12_auth_ml_api_demo
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import edu.farmingdale.alrajab.week12_auth_ml_api_demo.databinding.ActivityLandingBinding
 
@@ -16,15 +17,13 @@ class LandingActivity : AppCompatActivity() {
 
         binding.logoutBtn.setOnClickListener { logout() }
 
-
         firebaseAuth = FirebaseAuth.getInstance()
 
     }
 
     private fun logout() {
         firebaseAuth.signOut()
-            startActivity(Intent(this@LandingActivity,LoginActivity::class.java))
-
+        startActivity(Intent(this@LandingActivity,LoginActivity::class.java))
     }
 }
 

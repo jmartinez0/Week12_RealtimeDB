@@ -22,7 +22,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var signInRequest: BeginSignInRequest
     private val REQ_ONE_TAP = 2  // Can be any integer unique to the Activity
     private var showOneTapUI = true
-    private lateinit var mGoogleSignInClient: GoogleSignInClient
+    private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var mAuth: FirebaseAuth
 
     private val RC_SIGN_IN = 2021
@@ -47,17 +47,20 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun loginWithGoogle() {
+        firebaseAuth = FirebaseAuth.getInstance()
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.web_client_id))
             .requestEmail()
             .build()
 
         val googleSignInClient = GoogleSignIn.getClient(this, gso)
+        googleSignInClient.revokeAccess()
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        firebaseAuth = FirebaseAuth.getInstance()
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == RC_SIGN_IN) {
@@ -72,6 +75,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
+        firebaseAuth = FirebaseAuth.getInstance()
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         firebaseAuth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
@@ -91,14 +95,12 @@ class LoginActivity : AppCompatActivity() {
         val pass = binding.passET.text.toString()
 
         if (email.isNotEmpty() && pass.isNotEmpty()) {
-
             firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener {
                 if (it.isSuccessful) {
                     val intent = Intent(this, LandingActivity::class.java)
                     startActivity(intent)
                 } else {
                     Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
-
                 }
             }
         } else {
@@ -106,6 +108,7 @@ class LoginActivity : AppCompatActivity() {
 
         }
     }
+
 
 
 }
